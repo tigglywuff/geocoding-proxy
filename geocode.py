@@ -2,7 +2,6 @@ from urllib.parse import urlparse
 
 import configparser
 import urllib.request
-
 import util
 
 # Read config.ini for Geocode configurations
