@@ -18,9 +18,9 @@ This service has one GET request available that accepts the following query para
 
 | Parameter | Type | Description |
 | --- | --- | --- |
-| address | str | A human readable address, for example: `1600 Pennsylvania Ave NW` |
+| address | str | A human readable address, for example: `1600 Pennsylvania Ave` |
 
 It may be called directly in your browser.
 
 Example:
-- http://localhost:8000/?address=1600%20Pennsylvania%20Ave%20NW
+- http://localhost:8000/?address=1600%20Pennsylvania%20Ave
