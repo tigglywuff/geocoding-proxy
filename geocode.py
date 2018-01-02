@@ -14,16 +14,15 @@ Class Geocode is used to contact the primary third party geocoding service.
 class Geocode:
 
 	"""
-	Constructor for the primary Geocode service library. Initializes this url to the primary
-	geocoding service URL.
+	Constructor for the primary Geocode service library. Initializes config_section so that this
+	Geocode object reads from the correct section in config.ini
 	"""
 	def __init__(self):
 		self.config_section = 'GOOGLE'
 
 	"""
-	getQueryParams accepts an address and returns a dict as accepted by our primary geocoding
-	service.
-	@param address A human readable string containing an address
+	Accepts an address and returns a query params dict as expected by the primary geocoding service
+	@param address {str} a human readable address, ex: "1600 Pennsylvania Ave NW"
 	"""
 	def getQueryParams(self, address):
 		config.read('config.ini')
@@ -41,9 +40,9 @@ class Geocode:
 		return ret
 
 	"""
-	Given the data returned by the geocoding service, returns an object only including lat and lng.
-	@param data bytes object that contains coordinates
-	@returns bytes object containing properties lat and lng
+	Parses an object and returns an object that only has lat and lng
+	@param data {bytes} object that contains coordinates as returned by primary geocoding service
+	@returns {bytes} object containing lat and lng
 	"""
 	def parseCoords(self, data):
 		data = util.byteToDict(data)
@@ -51,8 +50,8 @@ class Geocode:
 		return util.dictToByte(coords)
 
 	"""
-	Performs a request to the geocoding service for the given address. Do not override this function.
-	@param address A human readable string containing an address
+	Performs a request to the geocoding service for the given address
+	@param address {str} a human readable address, ex: "1600 Pennsylvania Ave NW"
 	"""
 	def request(self, address):
 		config.read('config.ini')
@@ -84,14 +83,21 @@ class Geocode:
 			return False
 
 """
-An extension of Class Geocode where the constructor, getQueryParams(), and parseCoords() have been
-overwritten to use a backup geocoding service API.
+An extension of Class Geocode where the constructor and parseCoords() have been overriden to use a
+backup geocoding service API.
 """
 class BackupGeocode(Geocode):
 
+	"""
+	Initialize this Geocode to use HERE's configuration
+	"""
 	def __init__(self):
 		self.config_section = 'HERE'
 
+	"""
+	Parse lat and lng from HERE's return object
+	@param data {bytes} object that contains coordinates as returned by HERE
+	"""
 	def parseCoords(self, data):
 		data = util.byteToDict(data)
 		coords = data['Response']['View'][0]['Result'][0]['Location']['DisplayPosition']

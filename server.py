@@ -17,8 +17,7 @@ class MyHandler(BaseHTTPRequestHandler):
 		# Retrieve the query parameters for this request, returned as a dict
 		query_params = urllib.parse.parse_qs(urlparse(self.path).query)
 
-		# Require the user to pass in query parameter "address" with string value containing a human
-		# readable address
+		# Require the user to pass in query parameter "address" with string value containing a human readable address
 		if 'address' in query_params:
 			address = query_params['address'][0]
 
@@ -48,7 +47,9 @@ class MyHandler(BaseHTTPRequestHandler):
 			return self.respond(400, { "error": "No address query parameter specified" })
 
 	"""
-	Sends a response based on the provided error code and data object
+	Send a response based on the provided error code and data object
+	@param code {int} A valid HTTP error code ex: 200 or 400
+	@param data {bytes/dict} An object to respond with
 	"""
 	def respond(self, code, data):
 		# Cast data to byte if needed
