@@ -16,8 +16,8 @@ class MyHandler(BaseHTTPRequestHandler):
 		if 'address' in query_params:
 			response_code = 200
 			
-			# p = GeocodeGoogle();
-			p = geocode.GeocodeHere()
+			# p = geocode.Geocode();
+			p = geocode.BackupGeocode()
 			
 			address = query_params['address'][0]
 			data = p.request(address)
