@@ -47,10 +47,11 @@ class Geocode:
 		encoded_qs = urllib.parse.urlencode(query_string)
 
 		# Request the url
-		with urllib.request.urlopen(self.url + encoded_qs) as response:
-			resp = response.read()
-
-		return self.parseCoords(resp)
+		try:
+			response = urllib.request.urlopen(self.url + encoded_qs)
+			return self.parseCoords(response.read())
+		except urllib.error.HTTPError as e:
+			return False
 
 class BackupGeocode(Geocode):
 	def __init__(self):
@@ -71,4 +72,3 @@ class BackupGeocode(Geocode):
 			"lng": coords['Longitude']
 		}
 		return json.dumps(coords).encode('utf-8')
-
