@@ -3,38 +3,54 @@ from http.server import BaseHTTPRequestHandler
 from urllib.parse import urlparse
 
 import json
-import urllib.request
-
 import geocode
+import urllib.request
 
 class MyHandler(BaseHTTPRequestHandler):
 
+	"""
+	Override the do_GET function to accept an address parameter and perform the geocoding proxy service
+	"""
 	def do_GET(self):
 
+		# Retrieve the query parameters for this request, returned as a dict
 		query_params = urllib.parse.parse_qs(urlparse(self.path).query)
 
+		# Require the user to pass in query parameter "address" with string value containing a human
+		# readable address
 		if 'address' in query_params:
-			
 			address = query_params['address'][0]
 
-			p = geocode.Geocode();
-			data = p.request(address)
+			# Initialize constructor for calling primary geocoding service then request lat and lng data
+			geo = geocode.Geocode()
+			data = geo.request(address)
 
+			# If data exists then send it back
 			if data:
 				return self.respond(200, data)
+
 			else:
-				# fall to backup
-				q = geocode.BackupGeocode()
-				data = q.request(address)
+
+				# Try the backup geocoding service
+				geo = geocode.BackupGeocode()
+				data = geo.request(address)
+
+				# If there's data now send that back, otherwise respond with an error
 				if data:
 					return self.respond(200, data)
+
 				else:
-					return self.respond(400, json.dumps({"error": "all geocode services failed"}).encode('utf-8'))
+					return self.respond(400, json.dumps({"error": "No data returned from geocoding services"}).encode('utf-8'))
 
+		# Respond with an error if no query param was specified
 		else:
-			return self.respond(400, json.dumps({ "error": "No address query parameter specified." }).encode('utf-8'))
+			return self.respond(400, json.dumps({ "error": "No address query parameter specified" }).encode('utf-8'))
 
+	"""
+	Sends a response based on the provided error code and data object
+	"""
 	def respond(self, code, data):
+		print(type(data))
 		self.send_response(code)
 		self.send_header('Content-Type', 'application/json')
 		self.end_headers()
@@ -44,5 +60,6 @@ class MyHandler(BaseHTTPRequestHandler):
 
 server = HTTPServer(('localhost', 8000), MyHandler)
 
+# Run the server
 while True:
 	server.handle_request()
