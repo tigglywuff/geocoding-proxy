@@ -17,23 +17,23 @@ class Geocode:
 	Geocode object reads from the correct section in config.ini
 	"""
 	def __init__(self):
-		self.config_section = 'GOOGLE'
+		self.config_section = "GOOGLE"
 
 	"""
 	Accepts an address and returns a query params dict as expected by the primary geocoding service
 	@param address {str} a human readable address, ex: "1600 Pennsylvania Ave NW"
 	"""
 	def getQueryParams(self, address):
-		config.read('config.ini')
+		config.read("config.ini")
 
 		# Get the primary address key from the config
 		ret = {
-			config[self.config_section]['address_key']: address
+			config[self.config_section]["address_key"]: address
 		}
 
 		# Read any other keys as needed
 		for key in config[self.config_section]:
-			if not (key == 'url' or key == 'address_key'):
+			if not (key == "url" or key == "address_key"):
 				ret[key] = config[self.config_section][key]
 
 		return ret
@@ -45,7 +45,7 @@ class Geocode:
 	"""
 	def parseCoords(self, data):
 		data = util.byteToDict(data)
-		coords = data['results'][0]['geometry']['location']
+		coords = data["results"][0]["geometry"]["location"]
 		return util.dictToByte(coords)
 
 	"""
@@ -53,8 +53,8 @@ class Geocode:
 	@param address {str} a human readable address, ex: "1600 Pennsylvania Ave NW"
 	"""
 	def request(self, address):
-		config.read('config.ini')
-		self.url = config[self.config_section]['url']
+		config.read("config.ini")
+		self.url = config[self.config_section]["url"]
 
 		# Get the expected query params
 		query_string = self.getQueryParams(address)
@@ -64,6 +64,7 @@ class Geocode:
 
 		# Request the url
 		try:
+			print(self.url + encoded_qs)
 			response = urllib.request.urlopen(self.url + encoded_qs)
 			return self.parseCoords(response.read())
 
@@ -88,22 +89,22 @@ backup geocoding service API.
 class BackupGeocode(Geocode):
 
 	"""
-	Initialize this Geocode to use HERE's configuration
+	Initialize this Geocode to use HERE"s configuration
 	"""
 	def __init__(self):
-		self.config_section = 'HERE'
+		self.config_section = "HERE"
 
 	"""
-	Parse lat and lng from HERE's return object
+	Parse lat and lng from HERE"s return object
 	@param data {bytes} object that contains coordinates as returned by HERE
 	"""
 	def parseCoords(self, data):
 		data = util.byteToDict(data)
-		coords = data['Response']['View'][0]['Result'][0]['Location']['DisplayPosition']
+		coords = data["Response"]["View"][0]["Result"][0]["Location"]["DisplayPosition"]
 
 		# Need to rename key names from "Latitude" to "lat" and the same for lng
 		coords = {
-			"lat": coords['Latitude'],
-			"lng": coords['Longitude']
+			"lat": coords["Latitude"],
+			"lng": coords["Longitude"]
 		}
 		return util.dictToByte(coords)

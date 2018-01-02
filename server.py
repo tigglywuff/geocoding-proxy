@@ -18,8 +18,8 @@ class MyHandler(BaseHTTPRequestHandler):
 		query_params = urllib.parse.parse_qs(urlparse(self.path).query)
 
 		# Require the user to pass in query parameter "address" with string value containing a human readable address
-		if 'address' in query_params:
-			address = query_params['address'][0]
+		if "address" in query_params:
+			address = query_params["address"][0]
 
 			# Initialize constructor for calling primary geocoding service then request lat and lng data
 			geo = geocode.Geocode()
@@ -35,7 +35,7 @@ class MyHandler(BaseHTTPRequestHandler):
 				geo = geocode.BackupGeocode()
 				data = geo.request(address)
 
-				# If there's data now send that back, otherwise respond with an error
+				# If there"s data now send that back, otherwise respond with an error
 				if data:
 					return self.respond(200, data)
 
@@ -57,16 +57,20 @@ class MyHandler(BaseHTTPRequestHandler):
 			data = util.dictToByte(data)
 
 		self.send_response(code)
-		self.send_header('Content-Type', 'application/json')
+		self.send_header("Content-Type", "application/json")
 		self.end_headers()
 		self.wfile.write(data)
 		return
 
 # Read server information from config
 config = configparser.ConfigParser()
-config.read('config.ini')
+config.read("config.ini")
 
-server = HTTPServer((config['BASE']['host'], int(config['BASE']['port'])), MyHandler)
+host = config["BASE"]["host"]
+port = int(config["BASE"]["port"])
+server = HTTPServer((host, port), MyHandler)
+
+util.log("Server running at %s:%s ..." % (host, port))
 
 # Run the server
 while True:
