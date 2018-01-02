@@ -2,9 +2,13 @@ from http.server import HTTPServer
 from http.server import BaseHTTPRequestHandler
 from urllib.parse import urlparse
 
+import configparser
 import json
 import geocode
 import urllib.request
+
+config = configparser.ConfigParser()
+config.read('config.ini')
 
 class MyHandler(BaseHTTPRequestHandler):
 
@@ -50,15 +54,17 @@ class MyHandler(BaseHTTPRequestHandler):
 	Sends a response based on the provided error code and data object
 	"""
 	def respond(self, code, data):
-		print(type(data))
 		self.send_response(code)
 		self.send_header('Content-Type', 'application/json')
 		self.end_headers()
 		self.wfile.write(data)
 		return
 
+# Read server information from config
+host = (config['BASE']['host'])
+port = int(config['BASE']['port'])
 
-server = HTTPServer(('localhost', 8000), MyHandler)
+server = HTTPServer((host, port), MyHandler)
 
 # Run the server
 while True:

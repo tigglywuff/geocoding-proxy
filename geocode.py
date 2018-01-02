@@ -1,7 +1,12 @@
 from urllib.parse import urlparse
 
+import configparser
 import urllib.request
 import json
+
+# Read config.ini for Geocode configurations
+config = configparser.ConfigParser()
+config.read('config.ini')
 
 """
 Class Geocode is used to contact the primary third party geocoding service.
@@ -13,7 +18,7 @@ class Geocode:
 	geocoding service URL.
 	"""
 	def __init__(self):
-		self.url = "http://maps.googleapis.com/maps/api/geocode/json?"
+		self.config_section = 'GOOGLE'
 
 	"""
 	getQueryParams accepts an address and returns a dict as accepted by our primary geocoding
@@ -21,9 +26,17 @@ class Geocode:
 	@param address A human readable string containing an address
 	"""
 	def getQueryParams(self, address):
-		return {
-			"address": address
+		# Get the primary address key from the config
+		ret = {
+			config[self.config_section]['address_key']: address
 		}
+
+		# Read any other keys as needed
+		for key in config[self.config_section]:
+			if not (key == 'url' or key == 'address_key'):
+				ret[key] = config[self.config_section][key]
+
+		return ret
 
 	"""
 	Given the data returned by the geocoding service, returns an object only including lat and lng.
@@ -40,6 +53,7 @@ class Geocode:
 	@param address A human readable string containing an address
 	"""
 	def request(self, address):
+		self.url = config[self.config_section]['url']
 
 		# Get the expected query params
 		query_string = self.getQueryParams(address)
@@ -56,6 +70,10 @@ class Geocode:
 		except urllib.error.HTTPError as e:
 			return False
 
+		# Return false if the returned data is not formatted as expected
+		except IndexError:
+			return False
+
 """
 An extension of Class Geocode where the constructor, getQueryParams(), and parseCoords() have been
 overwritten to use a backup geocoding service API.
@@ -63,15 +81,7 @@ overwritten to use a backup geocoding service API.
 class BackupGeocode(Geocode):
 
 	def __init__(self):
-		self.url = 'https://geocoder.cit.api.here.com/6.2/geocode.json?'
-
-	def getQueryParams(self, address):
-		# Pass in my particular set of app_id and app_code credentials
-		return {
-			"app_id": "ARwHKNHdZvDjncf5oqgZ",
-			"app_code": "yhe7sdIYlh7hJKNZ8ADf3g",
-			"searchtext": address
-		}
+		self.config_section = 'HERE'
 
 	def parseCoords(self, data):
 		data = json.loads(data.decode('utf-8'))
