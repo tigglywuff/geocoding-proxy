@@ -2,11 +2,11 @@ from urllib.parse import urlparse
 
 import configparser
 import urllib.request
-import json
+
+import util
 
 # Read config.ini for Geocode configurations
 config = configparser.ConfigParser()
-config.read('config.ini')
 
 """
 Class Geocode is used to contact the primary third party geocoding service.
@@ -26,6 +26,8 @@ class Geocode:
 	@param address A human readable string containing an address
 	"""
 	def getQueryParams(self, address):
+		config.read('config.ini')
+
 		# Get the primary address key from the config
 		ret = {
 			config[self.config_section]['address_key']: address
@@ -44,15 +46,16 @@ class Geocode:
 	@returns bytes object containing properties lat and lng
 	"""
 	def parseCoords(self, data):
-		data = json.loads(data.decode('utf-8'))
+		data = util.byteToDict(data)
 		coords = data['results'][0]['geometry']['location']
-		return json.dumps(coords).encode('utf-8')
+		return util.dictToByte(coords)
 
 	"""
 	Performs a request to the geocoding service for the given address. Do not override this function.
 	@param address A human readable string containing an address
 	"""
 	def request(self, address):
+		config.read('config.ini')
 		self.url = config[self.config_section]['url']
 
 		# Get the expected query params
@@ -68,10 +71,16 @@ class Geocode:
 
 		# Returns false if the response is not 200 success
 		except urllib.error.HTTPError as e:
+			util.log(self.config_section + " did not return 200")
 			return False
 
 		# Return false if the returned data is not formatted as expected
 		except IndexError:
+			util.log("Object returned from " + self.config_section + " not formatted as expected")
+			return False
+
+		except Exception as e:
+			util.log(e)
 			return False
 
 """
@@ -84,7 +93,7 @@ class BackupGeocode(Geocode):
 		self.config_section = 'HERE'
 
 	def parseCoords(self, data):
-		data = json.loads(data.decode('utf-8'))
+		data = util.byteToDict(data)
 		coords = data['Response']['View'][0]['Result'][0]['Location']['DisplayPosition']
 
 		# Need to rename key names from "Latitude" to "lat" and the same for lng
@@ -92,4 +101,4 @@ class BackupGeocode(Geocode):
 			"lat": coords['Latitude'],
 			"lng": coords['Longitude']
 		}
-		return json.dumps(coords).encode('utf-8')
+		return util.dictToByte(coords)

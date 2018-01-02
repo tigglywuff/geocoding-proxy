@@ -3,12 +3,9 @@ from http.server import BaseHTTPRequestHandler
 from urllib.parse import urlparse
 
 import configparser
-import json
 import geocode
 import urllib.request
-
-config = configparser.ConfigParser()
-config.read('config.ini')
+import util
 
 class MyHandler(BaseHTTPRequestHandler):
 
@@ -44,16 +41,20 @@ class MyHandler(BaseHTTPRequestHandler):
 					return self.respond(200, data)
 
 				else:
-					return self.respond(400, json.dumps({"error": "No data returned from geocoding services"}).encode('utf-8'))
+					return self.respond(400, {"error": "No data returned from geocoding services"})
 
 		# Respond with an error if no query param was specified
 		else:
-			return self.respond(400, json.dumps({ "error": "No address query parameter specified" }).encode('utf-8'))
+			return self.respond(400, { "error": "No address query parameter specified" })
 
 	"""
 	Sends a response based on the provided error code and data object
 	"""
 	def respond(self, code, data):
+		# Cast data to byte if needed
+		if isinstance(data, dict):
+			data = util.dictToByte(data)
+
 		self.send_response(code)
 		self.send_header('Content-Type', 'application/json')
 		self.end_headers()
@@ -61,10 +62,10 @@ class MyHandler(BaseHTTPRequestHandler):
 		return
 
 # Read server information from config
-host = (config['BASE']['host'])
-port = int(config['BASE']['port'])
+config = configparser.ConfigParser()
+config.read('config.ini')
 
-server = HTTPServer((host, port), MyHandler)
+server = HTTPServer((config['BASE']['host'], int(config['BASE']['port'])), MyHandler)
 
 # Run the server
 while True:
